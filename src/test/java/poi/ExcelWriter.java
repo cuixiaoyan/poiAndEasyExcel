@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.Test;
 
 import java.io.FileOutputStream;
@@ -23,7 +24,7 @@ import java.util.Date;
  **/
 public class ExcelWriter {
     //当前项目的路径。
-    static String PATH = "/Users/cuixiaoyan/biancheng/utils/Java/poiAndEasyExcel/";
+    static String PATH = "/Users/cuixiaoyan/biancheng/utils/Java/poiAndEasyExcel/poi/";
 
     @Test
     public void testWrite03() throws Exception {
@@ -58,5 +59,41 @@ public class ExcelWriter {
 
         System.out.println("xxx统计表03 生成完毕！");
     }
+
+    @Test
+    public void testWrite07() throws Exception {
+        // 1、创建一个工作簿 07
+        Workbook workbook = new XSSFWorkbook();
+        // 2、创建一个工作表
+        Sheet sheet = workbook.createSheet("xxx统计表");
+        // 3、创建一个行  （1,1）
+        Row row1 = sheet.createRow(0);
+        // 4、创建一个单元格
+        Cell cell11 = row1.createCell(0);
+        cell11.setCellValue("今日新增观众");
+        // (1,2)
+        Cell cell12 = row1.createCell(1);
+        cell12.setCellValue("崔笑颜");
+
+        // 第二行 (2,1)
+        Row row2 = sheet.createRow(1);
+        Cell cell21 = row2.createCell(0);
+        cell21.setCellValue("统计时间");
+        // (2,2)
+        Cell cell22 = row2.createCell(1);
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        cell22.setCellValue(time);
+
+        // 生成一张表（IO 流）  03 版本就是使用 xlsx结尾！
+        FileOutputStream fileOutputStream = new FileOutputStream(PATH + "xxx统计表07.xlsx");
+        // 输出
+        workbook.write(fileOutputStream);
+        // 关闭流
+        fileOutputStream.close();
+
+        System.out.println("xxx统计表07 生成完毕！");
+
+    }
+
 
 }
