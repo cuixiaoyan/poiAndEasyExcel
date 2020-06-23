@@ -310,8 +310,8 @@ public void testRead03() throws Exception {
 
     // 读取值的时候，一定需要注意类型！
     // getStringCellValue 字符串类型
-    //        System.out.println(cell.getStringCellValue());
-    System.out.println(cell.getNumericCellValue());
+    System.out.println(cell.getStringCellValue());
+    //System.out.println(cell.getNumericCellValue());
     inputStream.close();
 }
 ```
@@ -336,8 +336,8 @@ public void testRead07() throws Exception {
 
     // 读取值的时候，一定需要注意类型！
     // getStringCellValue 字符串类型
-    //        System.out.println(cell.getStringCellValue());
-    System.out.println(cell.getNumericCellValue());
+    System.out.println(cell.getStringCellValue());
+    //System.out.println(cell.getNumericCellValue());
     inputStream.close();
 }
 ```
