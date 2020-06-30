@@ -457,3 +457,206 @@ public void testFormula() throws Exception {
 }
 ```
 
+# EasyExcel操作
+
+[官方文档](https://www.yuque.com/easyexcel)
+
+> 导入依赖
+
+```xml
+		// easyexcel
+    // https://mvnrepository.com/artifact/com.alibaba/easyexcel
+    compile group: 'com.alibaba', name: 'easyexcel', version: '2.2.6'
+```
+
+## 写入测试
+
+[写地址](https://www.yuque.com/easyexcel/doc/read)
+
+### 创建对象
+
+```java
+package easyExcel;
+
+import com.alibaba.excel.annotation.ExcelIgnore;
+import com.alibaba.excel.annotation.ExcelProperty;
+
+import java.util.Date;
+
+/**
+ * @program: poiAndEasyExcel
+ * @description:
+ * @author: cuixy
+ * @create: 2020-06-30 17:35
+ **/
+public class DemoData {
+
+    @ExcelProperty("字符串标题")
+    private String string;
+    @ExcelProperty("日期标题")
+    private Date date;
+    @ExcelProperty("数字标题")
+    private Double doubleData;
+    /**
+     * 忽略这个字段
+     */
+    @ExcelIgnore
+    private String ignore;
+
+    public String getString() {
+        return string;
+    }
+
+    public void setString(String string) {
+        this.string = string;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Double getDoubleData() {
+        return doubleData;
+    }
+
+    public void setDoubleData(Double doubleData) {
+        this.doubleData = doubleData;
+    }
+
+    public String getIgnore() {
+        return ignore;
+    }
+
+    public void setIgnore(String ignore) {
+        this.ignore = ignore;
+    }
+}
+```
+
+### 拿到实体类里的值
+
+```java
+ String PATH ="D:\\Project\\IdeaProject\\Bilibili-狂神说java\\";
+
+    private List<DemoData> data() {
+        List<DemoData> list = new ArrayList<DemoData>();
+        for (int i = 0; i < 10; i++) {
+            DemoData data = new DemoData();
+            data.setString("字符串" + i);
+            data.setDate(new Date());
+            data.setDoubleData(0.56);
+            list.add(data);
+        }
+        return list;
+    }
+```
+
+### **将list写入Excel**
+
+```java
+// 根据list 写入excel
+    @Test
+    public void simpleWrite() {
+        // 写法1
+        String fileName = PATH + "EasyTest.xlsx";
+        // 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+        // write (fileName, 格式类)
+        // sheet (表明)
+        // doWrite (数据)
+        EasyExcel.write(fileName, DemoData.class).sheet("模板").doWrite(data());
+    }
+```
+
+## 读取测试
+
+[读地址](https://www.yuque.com/easyexcel/doc/read)
+
+### 监听器
+
+```java
+// 有个很重要的点 DemoDataListener 不能被spring管理，要每次读取excel都要new,然后里面用到spring可以构造方法传进去
+public class DemoDataListener extends AnalysisEventListener<DemoData> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DemoDataListener.class);
+
+    private static final int BATCH_COUNT = 5;
+    List<DemoData> list = new ArrayList<DemoData>();
+
+    private DemoDAO demoDAO;
+    public DemoDataListener() {
+        // 这里是demo，所以随便new一个。实际使用如果到了spring,请使用下面的有参构造函数
+        demoDAO = new DemoDAO();
+    }
+
+    public DemoDataListener(DemoDAO demoDAO) {
+        this.demoDAO = demoDAO;
+    }
+
+    // 读取数据会执行 invoke 方法
+    // DemoData 类型
+    // AnalysisContext 分析上问
+    @Override
+    public void invoke(DemoData data, AnalysisContext context) {
+        System.out.println(JSON.toJSONString(data));
+        list.add(data);
+        // 达到BATCH_COUNT了，需要去存储一次数据库，防止数据几万条数据在内存，容易OOM
+        if (list.size() >= BATCH_COUNT) {
+            saveData(); // 持久化逻辑!
+            // 存储完成清理 list
+            list.clear();
+        }
+    }
+    /**
+     * 所有数据解析完成了 都会来调用
+     *
+     * @param context
+     */
+    @Override
+    public void doAfterAllAnalysed(AnalysisContext context) {
+        // 这里也要保存数据，确保最后遗留的数据也存储到数据库
+        saveData();
+        LOGGER.info("所有数据解析完成！");
+    }
+    /**
+     * 加上存储数据库
+     */
+    private void saveData() {
+        LOGGER.info("{}条数据，开始存储数据库！", list.size());
+        demoDAO.save(list);
+        LOGGER.info("存储数据库成功！");
+    }
+}
+```
+
+### 持久层
+
+```java
+/**
+ * 假设这个是你的DAO存储。当然还要这个类让spring管理，当然你不用需要存储，也不需要这个类。
+ **/
+public class DemoDAO {
+    public void save(List<DemoData> list) {
+        // 持久化操作！
+        // 如果是mybatis,尽量别直接调用多次insert,自己写一个mapper里面新增一个方法batchInsert,所有数据一次性插入
+    }
+}
+```
+
+### 测试代码
+
+```java
+@Test
+    public void simpleRead() {
+        // 有个很重要的点 DemoDataListener 不能被spring管理，要每次读取excel都要new,然后里面用到spring可以构造方法传进去
+        // 写法1：
+        String fileName = PATH + "EasyTest.xlsx";
+        // 这里 需要指定读用哪个class去读，然后读取第一个sheet 文件流会自动关闭
+
+        // 重点注意读取的逻辑 DemoDataListener
+        EasyExcel.read(fileName, DemoData.class, new DemoDataListener()).sheet().doRead();
+    }
+```
+
