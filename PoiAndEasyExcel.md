@@ -540,10 +540,11 @@ public class DemoData {
 ### 拿到实体类里的值
 
 ```java
- String PATH ="D:\\Project\\IdeaProject\\Bilibili-狂神说java\\";
+ //当前项目的路径。
+    static String PATH = "/Users/cuixiaoyan/biancheng/utils/Java/poiAndEasyExcel/easyExcel/";
 
     private List<DemoData> data() {
-        List<DemoData> list = new ArrayList<DemoData>();
+        java.util.List<DemoData> list = new ArrayList<DemoData>();
         for (int i = 0; i < 10; i++) {
             DemoData data = new DemoData();
             data.setString("字符串" + i);
