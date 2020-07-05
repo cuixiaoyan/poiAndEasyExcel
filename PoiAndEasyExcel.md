@@ -467,6 +467,10 @@ public void testFormula() throws Exception {
 		// easyexcel
     // https://mvnrepository.com/artifact/com.alibaba/easyexcel
     compile group: 'com.alibaba', name: 'easyexcel', version: '2.2.6'
+
+		// https://mvnrepository.com/artifact/com.alibaba/fastjson
+		compile group: 'com.alibaba', name: 'fastjson', version: '1.2.72'
+
 ```
 
 ## 写入测试
@@ -579,14 +583,33 @@ public class DemoData {
 ### 监听器
 
 ```java
-// 有个很重要的点 DemoDataListener 不能被spring管理，要每次读取excel都要new,然后里面用到spring可以构造方法传进去
+package easyExcel;
+
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.fastjson.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @program: poiAndEasyExcel
+ * @description: 读取监听器类
+ * @author: cuixy
+ * @create: 2020-07-05 08:49
+ **/
 public class DemoDataListener extends AnalysisEventListener<DemoData> {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DemoDataListener.class);
+
 
     private static final int BATCH_COUNT = 5;
     List<DemoData> list = new ArrayList<DemoData>();
 
     private DemoDAO demoDAO;
+
     public DemoDataListener() {
         // 这里是demo，所以随便new一个。实际使用如果到了spring,请使用下面的有参构造函数
         demoDAO = new DemoDAO();
@@ -610,6 +633,7 @@ public class DemoDataListener extends AnalysisEventListener<DemoData> {
             list.clear();
         }
     }
+
     /**
      * 所有数据解析完成了 都会来调用
      *
@@ -621,6 +645,7 @@ public class DemoDataListener extends AnalysisEventListener<DemoData> {
         saveData();
         LOGGER.info("所有数据解析完成！");
     }
+
     /**
      * 加上存储数据库
      */
@@ -635,6 +660,17 @@ public class DemoDataListener extends AnalysisEventListener<DemoData> {
 ### 持久层
 
 ```java
+package easyExcel;
+
+/**
+ * @program: poiAndEasyExcel
+ * @description: DAO存储
+ * @author: cuixy
+ * @create: 2020-07-05 08:50
+ **/
+
+import java.util.List;
+
 /**
  * 假设这个是你的DAO存储。当然还要这个类让spring管理，当然你不用需要存储，也不需要这个类。
  **/
@@ -649,7 +685,24 @@ public class DemoDAO {
 ### 测试代码
 
 ```java
-@Test
+package easyExcel;
+
+import com.alibaba.excel.EasyExcel;
+import org.junit.Test;
+
+/**
+ * @program: poiAndEasyExcel
+ * @description: 测试读取方法
+ * @author: cuixy
+ * @create: 2020-07-05 08:53
+ **/
+public class simpleRead {
+
+    static String PATH = "/Users/cuixiaoyan/biancheng/utils/Java/poiAndEasyExcel/easyExcel/";
+
+
+
+    @Test
     public void simpleRead() {
         // 有个很重要的点 DemoDataListener 不能被spring管理，要每次读取excel都要new,然后里面用到spring可以构造方法传进去
         // 写法1：
@@ -659,5 +712,8 @@ public class DemoDAO {
         // 重点注意读取的逻辑 DemoDataListener
         EasyExcel.read(fileName, DemoData.class, new DemoDataListener()).sheet().doRead();
     }
+
+
+}
 ```
 
